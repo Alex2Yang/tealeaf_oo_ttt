@@ -46,22 +46,32 @@ class Player
   def display_winning_message
     puts "#{name} won!"
   end
+
+  def choose(board)
+    choice = get_choice(board)
+    self.choices << choice
+    board.squares[choice] = self.class::MARK
+  end
+
 end
 
 class Human < Player
-  def choose(board)
+  MARK = 'X'
+
+  def get_choice(board)
     begin
       puts "Choose a square:#{board.unpicked}"
       answer = gets.chomp.to_i
     end until board.unpicked.include?(answer)
 
-    self.choices << answer
-    board.squares[answer] = Game::PLAYER_MARK
+    answer
   end
 end
 
 class Computer < Player
-  def smarter_choice(board)
+  MARK = 'O'
+
+  def get_choice(board)
     smarter_choices = []
     two_computer_mark = []
     two_player_mark = []
@@ -71,13 +81,13 @@ class Computer < Player
     Game::WINNING_LINES.each do |line|
       unpicked_squares = board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
       case board.squares.values_at(*line).sort
-      when ([Game::COMPUTER_MARK] * 2 + [' ']).sort
+      when ([Computer::MARK] * 2 + [' ']).sort
         two_computer_mark += unpicked_squares
-      when ([Game::PLAYER_MARK] * 2 + [' ']).sort
+      when ([Human::MARK] * 2 + [' ']).sort
         two_player_mark += unpicked_squares
-      when ([' '] * 2 + [Game::COMPUTER_MARK]).sort
+      when ([' '] * 2 + [Computer::MARK]).sort
         one_computer_mark += unpicked_squares
-      when ([' '] * 2 + [Game::PLAYER_MARK]).sort
+      when ([' '] * 2 + [Human::MARK]).sort
         one_player_mark += unpicked_squares
       end
     end
@@ -94,12 +104,6 @@ class Computer < Player
       end
 
     smarter_choices.sample
-  end
-
-  def choose(board)
-    choice = smarter_choice(board)
-    self.choices << choice
-    board.squares[choice] = Game::COMPUTER_MARK
   end
 end
 
