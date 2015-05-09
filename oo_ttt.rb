@@ -117,8 +117,6 @@ class Game
                     [3,6,9],
                     [1,5,9],
                     [3,5,7]  ]
-  PLAYER_MARK = 'X'
-  COMPUTER_MARK = 'O'
 
   def initialize
     @player = Human.new(get_user_name)
