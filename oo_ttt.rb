@@ -62,30 +62,38 @@ end
 
 class Computer < Player
   def smarter_choice(board)
+    smarter_choices = []
     two_computer_mark = []
     two_player_mark = []
     one_computer_mark = []
     one_player_mark = []
 
     Game::WINNING_LINES.each do |line|
+      unpicked_squares = board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
       case board.squares.values_at(*line).sort
       when ([Game::COMPUTER_MARK] * 2 + [' ']).sort
-        two_computer_mark += board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
+        two_computer_mark += unpicked_squares
       when ([Game::PLAYER_MARK] * 2 + [' ']).sort
-        two_player_mark += board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
+        two_player_mark += unpicked_squares
       when ([' '] * 2 + [Game::COMPUTER_MARK]).sort
-        one_computer_mark += board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
+        one_computer_mark += unpicked_squares
       when ([' '] * 2 + [Game::PLAYER_MARK]).sort
-        one_player_mark += board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
+        one_player_mark += unpicked_squares
       end
     end
 
-    return two_computer_mark.sample if two_computer_mark.any?
-    return two_player_mark.sample if two_player_mark.any?
-    return one_computer_mark.sample if one_computer_mark.any?
-    return one_player_mark.sample if one_player_mark.any?
-    return board.unpicked.sample
+    [ two_computer_mark,
+      two_player_mark,
+      one_computer_mark,
+      one_player_mark,
+      board.unpicked  ].each do |choices|
+        if choices.any?
+          smarter_choices = choices
+          break
+        end
+      end
 
+    smarter_choices.sample
   end
 
   def choose(board)
