@@ -20,39 +20,28 @@ class Board
   end
 
   def new!
-    9.times {|p| self.squares[p + 1] = ' ' }
+    (1..9).each { |p| self.squares[p] = ' ' }
   end
 
   def unpicked
-    squares.select {|_,v| v == ' ' }.keys
+    squares.select { |_, v| v == ' ' }.keys
+  end
+
+  def mark_square!(choice, player)
+    self.squares[choice] = player.class::MARK
   end
 end
 
 class Player
   attr_reader :name
-  attr_accessor :choices
 
-  def initialize(name= 'player')
-    @choices = []
+  def initialize(name)
     @name = name
-  end
-
-  def win?
-    Game::WINNING_LINES.any? do |line|
-      line.all? {|i| choices.include?(i)}
-    end
   end
 
   def display_winning_message
     puts "#{name} won!"
   end
-
-  def choose(board)
-    choice = get_choice(board)
-    self.choices << choice
-    board.squares[choice] = self.class::MARK
-  end
-
 end
 
 class Human < Player
@@ -79,7 +68,7 @@ class Computer < Player
     one_player_mark = []
 
     Game::WINNING_LINES.each do |line|
-      unpicked_squares = board.squares.select{|k,v| line.include?(k) && v == ' '}.keys
+      unpicked_squares = board.squares.select{ |k, v| line.include?(k) && v == ' ' }.keys
       case board.squares.values_at(*line).sort
       when ([Computer::MARK] * 2 + [' ']).sort
         two_computer_mark += unpicked_squares
@@ -109,6 +98,7 @@ end
 
 class Game
   attr_reader :player, :computer, :board
+
   WINNING_LINES = [ [1,2,3],
                     [4,5,6],
                     [7,8,9],
@@ -129,32 +119,37 @@ class Game
     answer = gets.chomp.downcase.capitalize
   end
 
+  def is_winner?(player)
+    WINNING_LINES.any? do |line|
+      board.squares.values_at(*line) == [player.class::MARK] * 3
+    end
+  end
+
   def players_take_turn_choose(board)
     while board.unpicked.any?
       board.draw
 
-      player.choose(board)
+      board.mark_square!(player.get_choice(board), player)
       board.draw
-      if player.win?
+      if is_winner?(player)
         player.display_winning_message
         break
       end
 
-      computer.choose(board)
+      board.mark_square!(computer.get_choice(board), computer)
       board.draw
-      if computer.win?
+      if is_winner?(computer)
         computer.display_winning_message
         break
       end
     end
 
-    puts "It's a tie!" unless computer.win? || player.win?
+    puts "It's a tie!" unless is_winner?(computer) || is_winner?(player)
   end
 
   def run
     loop do
       board.new!
-      reset_players_choice
       players_take_turn_choose(board)
       break unless once_again?
     end
@@ -167,11 +162,6 @@ class Game
     end until ['y', 'n'].include?(answer)
 
     answer == 'y'
-  end
-
-  def reset_players_choice
-    player.choices.clear
-    computer.choices.clear
   end
 end
 
